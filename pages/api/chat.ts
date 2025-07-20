@@ -2,33 +2,35 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const { message } = req.body;
+
+  if (!message) {
+    res.status(400).json({ error: "No message provided" });
+    return;
   }
 
   try {
-    const { message } = req.body;
-
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are Judy, a helpful assistant. Keep answers short and friendly."
-        },
-        { role: "user", content: message }
-      ]
+      messages: [{ role: "user", content: message }],
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply = completion.choices[0].message?.content || "Sorry, no response";
+
     res.status(200).json({ reply });
   } catch (error) {
-    console.error("OpenAI Error:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    res.status(500).json({ error: "OpenAI API error" });
   }
 }
