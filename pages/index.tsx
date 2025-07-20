@@ -1,43 +1,45 @@
-
 import { useState } from "react";
 
 export default function Home() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState("");
 
   const sendMessage = async () => {
-    if (!input) return;
+    if (!input.trim()) return;
+
     const userMessage = { role: "user", content: input };
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
 
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input })
+      body: JSON.stringify({ message: input }),
     });
 
     const data = await res.json();
     const botMessage = { role: "assistant", content: data.reply };
-    setMessages((m) => [...m, botMessage]);
+    setMessages((prev) => [...prev, botMessage]);
     setInput("");
   };
 
   return (
-    <main style={{ maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
+    <main style={{ maxWidth: "600px", margin: "auto", fontFamily: "sans-serif", padding: "20px" }}>
       <h2>Hi, I am Judy – your Assistant 🤖</h2>
       <div style={{ border: "1px solid #ccc", padding: "10px", height: "300px", overflowY: "auto" }}>
         {messages.map((m, i) => (
-          <p key={i}><strong>{m.role}:</strong> {m.content}</p>
+          <p key={i}><strong>{m.role === "user" ? "You" : "Judy"}:</strong> {m.content}</p>
         ))}
       </div>
-      <input
-        style={{ width: "80%", padding: "8px", marginTop: "10px" }}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        placeholder="Type your message..."
-      />
-      <button style={{ padding: "8px 12px" }} onClick={sendMessage}>Send</button>
+      <div style={{ marginTop: "10px" }}>
+        <input
+          style={{ width: "80%", padding: "8px" }}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="Type your message..."
+        />
+        <button style={{ padding: "8px 12px", marginLeft: "5px" }} onClick={sendMessage}>Send</button>
+      </div>
     </main>
   );
 }
