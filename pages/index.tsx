@@ -1,34 +1,54 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! I’m Judy, your assistant 🤖" },
-  ]);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [input, setInput] = useState("");
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { role: "user", content: input }]);
+  const sendMessage = async () => {
+    if (!input) return;
+    const userMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: input })
+    });
+
+    const data = await res.json();
+    const botMessage = { role: "assistant", content: data.reply };
+    setMessages((prev) => [...prev, botMessage]);
     setInput("");
-    // Normally call API here
   };
 
   return (
-    <main style={{ maxWidth: 600, margin: "auto", fontFamily: "sans-serif" }}>
-      <h2>Hi, I am Judy – your Assistant 🤖</h2>
-      <div style={{ border: "1px solid #ccc", padding: 10, height: 300, overflowY: "auto" }}>
-        {messages.map((msg, i) => (
-          <p key={i}><strong>{msg.role}:</strong> {msg.content}</p>
+    <main style={{ maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
+      <h2>🤖 Hi, I am Judy – your Assistant</h2>
+      <div
+        style={{
+          border: "1px solid #ccc",
+          padding: "10px",
+          height: "300px",
+          overflowY: "auto",
+          marginBottom: "10px"
+        }}
+      >
+        {messages.map((m, i) => (
+          <p key={i}>
+            <strong>{m.role === "user" ? "You" : "Judy"}:</strong> {m.content}
+          </p>
         ))}
       </div>
       <input
-        style={{ width: "80%", padding: 8, marginTop: 10 }}
+        style={{ width: "80%", padding: "8px" }}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         placeholder="Type your message..."
       />
-      <button style={{ padding: "8px 12px" }} onClick={sendMessage}>Send</button>
+      <button style={{ padding: "8px 12px", marginLeft: "5px" }} onClick={sendMessage}>
+        Send
+      </button>
     </main>
   );
 }
