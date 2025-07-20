@@ -1,54 +1,55 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
   const sendMessage = async () => {
     if (!input) return;
     const userMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages([...messages, userMessage]);
 
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input })
+      body: JSON.stringify({ message: input }),
     });
 
     const data = await res.json();
     const botMessage = { role: "assistant", content: data.reply };
-    setMessages((prev) => [...prev, botMessage]);
+    setMessages((m) => [...m, botMessage]);
     setInput("");
   };
 
   return (
-    <main style={{ maxWidth: "600px", margin: "auto", fontFamily: "sans-serif" }}>
-      <h2>🤖 Hi, I am Judy – your Assistant</h2>
+    <main style={{ maxWidth: 600, margin: "auto", fontFamily: "sans-serif" }}>
+      <h2>Hi, I am Judy – your Assistant 🤖</h2>
       <div
         style={{
           border: "1px solid #ccc",
-          padding: "10px",
-          height: "300px",
+          padding: 10,
+          height: 300,
           overflowY: "auto",
-          marginBottom: "10px"
         }}
       >
         {messages.map((m, i) => (
           <p key={i}>
-            <strong>{m.role === "user" ? "You" : "Judy"}:</strong> {m.content}
+            <strong>{m.role}:</strong> {m.content}
           </p>
         ))}
       </div>
       <input
-        style={{ width: "80%", padding: "8px" }}
+        style={{ width: "80%", padding: 8, marginTop: 10 }}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         placeholder="Type your message..."
       />
-      <button style={{ padding: "8px 12px", marginLeft: "5px" }} onClick={sendMessage}>
+      <button style={{ padding: "8px 12px" }} onClick={sendMessage}>
         Send
       </button>
     </main>
   );
 }
+
+
